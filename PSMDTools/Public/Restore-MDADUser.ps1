@@ -17,7 +17,11 @@ function Restore-MDADUser {
   [CmdletBinding()]
   param (
     # The samAccountName of the deleted user
-    [Parameter(Mandatory = $true)]
+    [Parameter(
+      Mandatory = $true,
+      Position=0,
+      ValueFromPipeline=$true,
+      ValueFromPipelineByPropertyName=$true )]
     [string]
     $sAMAccountName
   )
