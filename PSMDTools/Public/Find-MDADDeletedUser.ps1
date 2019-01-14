@@ -12,7 +12,11 @@ function Find-MDADDeletedUser {
   [CmdletBinding()]
   param (
     # The full or part username of the deleted user
-    [Parameter(Mandatory = $true)]
+    [Parameter(
+      Mandatory = $true,
+      Position=0,
+      ValueFromPipeline=$true,
+      ValueFromPipelineByPropertyName=$true )]
     [string]
     $UserName
   )
