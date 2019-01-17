@@ -43,14 +43,15 @@ function Restore-MDADUser {
     else {
       try {
         Restore-ADObject -Identity $distinguishedName -ErrorAction Stop
+        $message = "User $sAMAccountName has been restored. `n"
+        $message += (Get-ADUser -Identity $sAMAccountName).DistinguishedName
       }
       catch {
         Write-Error -Message "Unable to restore $sAMAccount to Active Directory"
       }
     }
 
-    $message = "User $sAMAccountName has been restored: `n"
-    $message += (Get-ADUser -Identity $sAMAccountName).DistinguishedName
+
     Return $message
   } # end process
   
