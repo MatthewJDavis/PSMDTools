@@ -47,7 +47,7 @@ function Restore-MDADUser {
         $message += (Get-ADUser -Identity $sAMAccountName).DistinguishedName
       }
       catch {
-        Write-Error -Message "Unable to restore $sAMAccount to Active Directory"
+        Write-Error -Message "Unable to restore $sAMAccount to Active Directory `n $PSItem"
       }
     }
 
