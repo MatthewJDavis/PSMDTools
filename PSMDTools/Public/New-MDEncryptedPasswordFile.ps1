@@ -7,7 +7,7 @@ function New-MDEncryptedPasswordFile {
     $Path,
     # Password to encrypt
     [Parameter(mandatory=$true)]
-    [String]
+    [SecureString]
     $Password
   )
   
@@ -27,7 +27,7 @@ function New-MDEncryptedPasswordFile {
     }
 
     try {
-      $Password | set-content $passwordFile
+      $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
     }
     catch {
       
