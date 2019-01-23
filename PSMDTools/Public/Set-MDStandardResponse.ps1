@@ -11,6 +11,18 @@ function Set-MDStandardResponse {
     $ResponseType 
   )
 
+  if ($PSVersionTable.PSEdition -eq 'Desktop') {
+    $clip = Set-Clipboard
+  } elseif ($PSVesionTable.PSEdition -eq 'Core') {
+    if ((Get-Module -Name ClipboardText -ListAvailable) -eq $true) {
+      Import-Module -Name ClipboardText
+      $clip = Set-ClipboardText
+    } else {
+      Write-Error 'ClipboardText module not found. Please install it from the PowerShell gallery by running Install-Module -Name ClipboardText' -ErrorAction Stop
+    }
+  }
+
+
   switch ($ResponseType) {
     'aws' { $response = "Hello $Name, `r`rYour account has been added to the requested AWS group(s). It can take 15 mins for the changes to propagate and you may need to logout and back into AWS Central access. `r`rThanks `r`rMatt" }
     'adgroupadd' {$response = "Hello , `r`rAD account added to requested group.`r`rThanks,`r`rMatt"}
@@ -18,6 +30,6 @@ function Set-MDStandardResponse {
     Default {}
   }
 
-  
-  Set-ClipboardText $response
+  # Set the clipboard to the response
+  $clip $response
 }
