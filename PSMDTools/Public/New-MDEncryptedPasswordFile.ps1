@@ -2,11 +2,11 @@ function New-MDEncryptedPasswordFile {
   [CmdletBinding()]
   param (
     # Path of where to save the Key and Password files
-    [Parameter(mandatory=$true)]
+    [Parameter(mandatory = $true)]
     [String]
     $Path,
     # Password to encrypt
-    [Parameter(mandatory=$true)]
+    [Parameter(mandatory = $true)]
     [SecureString]
     $Password
   )
@@ -21,15 +21,13 @@ function New-MDEncryptedPasswordFile {
       $Key = New-Object Byte[] 32
       [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
       $Key | out-file  $keyFile
-    }
-    catch {
+    } catch {
       
     }
 
     try {
       $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
-    }
-    catch {
+    } catch {
       
     }
   }
