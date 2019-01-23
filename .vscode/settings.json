@@ -1,0 +1,6 @@
+{
+  "files.defaultLanguage": "powershell",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "powershell.codeFormatting.preset": "OTBS"
+}
