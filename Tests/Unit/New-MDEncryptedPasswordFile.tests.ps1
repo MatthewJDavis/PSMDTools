@@ -1,3 +1,8 @@
+$projectRoot = Resolve-Path "$PSScriptRoot\..\.."
+$PublicRoot = Resolve-Path "$projectRoot\*\Public"
+$FunctionList = Get-ChildItem $PublicRoot
+
+
 Describe 'New-MDEncryptedPasswordFile' {
   $pass = ConvertTo-SecureString -String "Monkey1234" -AsPlainText -Force
   Context 'File tests' {
@@ -9,5 +14,5 @@ Describe 'New-MDEncryptedPasswordFile' {
       Test-Path -Path $TestDrive\aes.key | should be $true
     }
   }
-  
+
 }
