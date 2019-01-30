@@ -1,6 +1,6 @@
 $projectRoot = Resolve-Path "$PSScriptRoot\..\.."
 $PublicRoot = Resolve-Path "$projectRoot\*\Public"
-$FunctionList = Get-ChildItem $PublicRoot
+. $PublicRoot\New-MDEncryptedPasswordFile.ps1
 
 
 Describe 'New-MDEncryptedPasswordFile' {
