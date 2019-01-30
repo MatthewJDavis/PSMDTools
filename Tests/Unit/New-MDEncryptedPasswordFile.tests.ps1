@@ -1,3 +1,4 @@
+# Get the function from the Public directory and dot source it for testing against
 $projectRoot = Resolve-Path "$PSScriptRoot\..\.."
 $PublicRoot = Resolve-Path "$projectRoot\*\Public"
 . $PublicRoot\New-MDEncryptedPasswordFile.ps1
