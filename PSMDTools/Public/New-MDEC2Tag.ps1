@@ -1,3 +1,4 @@
+function New-MDEC2Tag {
 <#
 .SYNOPSIS
   Create a tag for AWS Ec2 instance
@@ -13,7 +14,6 @@
 .NOTES
   General notes
 #>
-function New-MDEC2Tag {
   [CmdletBinding()]
   param (
     # Tag Key
