@@ -2,10 +2,10 @@
 
 #Need to switch here for linux or windows
 #Windows
-$UserList = Get-Clipboard 
+$UserList = Get-Clipboard
 
 
 
-foreach($user in $userList){
-  $adUser += "'" + $user.Replace(' ','.') + "',"
+foreach ($user in $userList) {
+    $adUser += "'" + $user.Replace(' ', '.') + "',"
 }
