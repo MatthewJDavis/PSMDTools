@@ -9,36 +9,36 @@
   This command searches the Active Directory recycle bin for users that sAMAccountName contains the word test anywhere.
 #>
 function Find-MDADDeletedUser {
-  [CmdletBinding()]
-  param (
-    # The full or part username of the deleted user
-    [Parameter(
-      Mandatory = $true,
-      Position=0,
-      ValueFromPipeline=$true,
-      ValueFromPipelineByPropertyName=$true )]
-    [string]
-    $UserName
-  )
-  
-  begin {
-    # Make sure Active Directory Recycle Bin is Enabled
-    if ($null -eq (Get-ADOptionalFeature -filter *).EnabledScopes) {
-      Write-Error 'Acitve Directory Recycle Bin is not Enabled' -ErrorAction Stop
+    [CmdletBinding()]
+    param (
+        # The full or part username of the deleted user
+        [Parameter(
+            Mandatory = $true,
+            Position = 0,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true )]
+        [string]
+        $UserName
+    )
+
+    begin {
+        # Make sure Active Directory Recycle Bin is Enabled
+        if ($null -eq (Get-ADOptionalFeature -filter *).EnabledScopes) {
+            Write-Error 'Acitve Directory Recycle Bin is not Enabled' -ErrorAction Stop
+        }
+
+        $deletedObjectContainer = (get-addomain).DeletedObjectsContainer
     }
-    
-    $deletedObjectContainer = (get-addomain).DeletedObjectsContainer    
-  }
-  
-  process {
-    $userList = Get-ADObject -SearchBase $deletedObjectContainer -IncludeDeletedObjects -filter "sAMAccountName -like '*$UserName*'" -Properties userPrincipalName, sAMAccountName  |
-      Select-Object userPrincipalName, sAMAccountName
-    Write-Output $userList
-  }
-  
-  end {
-    remove-variable deletedObjectContainer
-  }
+
+    process {
+        $userList = Get-ADObject -SearchBase $deletedObjectContainer -IncludeDeletedObjects -filter "sAMAccountName -like '*$UserName*'" -Properties userPrincipalName, sAMAccountName |
+        Select-Object userPrincipalName, sAMAccountName
+        Write-Output $userList
+    }
+
+    end {
+        remove-variable deletedObjectContainer
+    }
 }
 <#
 .SYNOPSIS
@@ -52,42 +52,42 @@ function Find-MDADDeletedUser {
   (Get-ADComputer dc01).DistinguishedName | Get-ADOuFromDN
 #>
 function Get-MDADOUFromDN {
-  [CmdletBinding()]
-  param (
-    # The string with the distinguished name from an AD cmdlet output
-    [Parameter(Mandatory=$true,
-    Position=0,
-    ValueFromPipeline=$true)]
-    [string]
-    $DistinguishedName
-  )
-  
-  begin {
-    if(-not (Select-String -InputObject $DistinguishedName -Pattern 'OU' -CaseSensitive -Quiet)){
-      Write-Host 'OU not found in input string'
-      Break   
+    [CmdletBinding()]
+    param (
+        # The string with the distinguished name from an AD cmdlet output
+        [Parameter(Mandatory = $true,
+            Position = 0,
+            ValueFromPipeline = $true)]
+        [string]
+        $DistinguishedName
+    )
+
+    begin {
+        if (-not (Select-String -InputObject $DistinguishedName -Pattern 'OU' -CaseSensitive -Quiet)) {
+            Write-Host 'OU not found in input string'
+            Break
+        }
     }
-  }
-  
-  process {
-    $ouIndex = $DistinguishedName.IndexOf('OU')
-    $ouPath = $DistinguishedName.Remove(0,$ouIndex)
-    Write-Output -InputObject $ouPath
-  }
-  
-  end {
-  }
+
+    process {
+        $ouIndex = $DistinguishedName.IndexOf('OU')
+        $ouPath = $DistinguishedName.Remove(0, $ouIndex)
+        Write-Output -InputObject $ouPath
+    }
+
+    end {
+    }
 }
 # Prototype code
 
 #Need to switch here for linux or windows
 #Windows
-$UserList = Get-Clipboard 
+$UserList = Get-Clipboard
 
 
 
-foreach($user in $userList){
-  $adUser += "'" + $user.Replace(' ','.') + "',"
+foreach ($user in $userList) {
+    $adUser += "'" + $user.Replace(' ', '.') + "',"
 }
 <#
 .DESCRIPTION
@@ -119,6 +119,67 @@ function Get-DirectorySize {
 }
 <#
 .SYNOPSIS
+    Gets basic information about a computer system
+.DESCRIPTION
+    Long description
+.EXAMPLE
+    PS C:\> <example usage>
+    Explanation of what the example does
+.INPUTS
+    Inputs (if any)
+.OUTPUTS
+    Output (if any)
+.NOTES
+    General notes
+#>
+function Get-MDSystemInfo {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $ComputerName = 'localhost',
+        [Parameter()]
+        [switch]
+        $RunRemote
+    )
+
+    begin {
+    }
+
+    process {
+        $environment = $PSVersionTable.Platform
+        switch ($environment) {
+            'Win32NT' {
+                $os = Get-CimInstance -ClassName Win32_OperatingSystem
+                $comp = Get-CimInstance -ClassName Win32_ComputerSystem
+            }
+            Default {
+                'Environment not yet supported'
+                break
+            }
+        }
+
+        $system = [PSCustomObject][ordered]@{
+            'OS'                = $os.Caption
+            'Version'           = $os.Version
+            'Build'             = $os.BuildNumber
+            'LastBootTime'      = $os.LastBootUpTime
+            'ComputerName'      = $comp.Name
+            'Manufacturer'      = $comp.Manufacturer
+            'Model'             = $comp.Model
+            'LogicalProcessors' = $comp.NumberOfLogicalProcessors
+            'Ram'               = "$([math]::Round($comp.TotalPhysicalMemory / 1GB))GB"
+            'WindowsDir'        = $os.WindowsDirectory
+        }
+        $system
+    }
+
+    end {
+    }
+}
+function New-MDEC2Tag {
+    <#
+.SYNOPSIS
   Create a tag for AWS Ec2 instance
 .DESCRIPTION
   Creates a key value pair for tagging an EC2 instance
@@ -132,146 +193,142 @@ function Get-DirectorySize {
 .NOTES
   General notes
 #>
-function New-MDEC2Tag {
-  [CmdletBinding()]
-  param (
-    # Tag Key
-    [Parameter(Mandatory = $true)]
-    [string]
-    $Key,
-    # Tag Value
-    [Parameter(Mandatory = $true)]
-    [string]
-    $Value
-  )
-  
-  begin {
-    # This flag allows us to abort the actual execution of the script if any of
-    # the checks in the Begin block fail.
-    $Script:AbortFromBegin = $false
+    [CmdletBinding()]
+    param (
+        # Tag Key
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Key,
+        # Tag Value
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Value
+    )
 
-    # Import the AWS PowerShell module. Stop if unsuccessful, since we won't be
-    # able to do anything useful without it. Also, we are forcing Verbose to
-    # false to prevent tons of output when the caller wants verbose output from
-    # the script.
-    if ($PSVersionTable.PSEdition -eq 'Desktop') {
-      Import-Module -Name AWSPowerShell -Verbose:$false -ErrorAction Stop
-    }
-    elseif ($PSVersionTable.PSEdition -eq 'Core') {
-      Import-Module -Name AWSPowerShell.NetCore -Verbose:$false -ErrorAction Stop
-    }
-    
+    begin {
+        # This flag allows us to abort the actual execution of the script if any of
+        # the checks in the Begin block fail.
+        $Script:AbortFromBegin = $false
 
-    # If the caller gave us a profile name to use, set that up.
-    if ($PSBoundParameters.ContainsKey("ProfileName")) {
-      # There might be a session profile set already. Store it so we can put
-      # it back later.
-      $Script:PreviousSessionCredential = Get-AWSCredential
+        # Import the AWS PowerShell module. Stop if unsuccessful, since we won't be
+        # able to do anything useful without it. Also, we are forcing Verbose to
+        # false to prevent tons of output when the caller wants verbose output from
+        # the script.
+        if ($PSVersionTable.PSEdition -eq 'Desktop') {
+            Import-Module -Name AWSPowerShell -Verbose:$false -ErrorAction Stop
+        } elseif ($PSVersionTable.PSEdition -eq 'Core') {
+            Import-Module -Name AWSPowerShell.NetCore -Verbose:$false -ErrorAction Stop
+        }
 
-      # Now set a session default credential to use for our script.
-      Write-Verbose -Message "Setting session default profile to '$ProfileName'."
-      Set-AWSCredential -ProfileName $ProfileName
 
-      # The special variable $? will contain true if the previous command was
-      # successful, otherwise false. If we failed to set the session profile,
-      # abort the script.
-      $Script:AbortFromBegin = $Script:AbortFromBegin -or !$?
-    }
-    
-    # If the caller gave us a region to use, set that up.
-    if ($PSBoundParameters.ContainsKey("Region")) {
-      # There might be a session default region set already. Store it so we
-      # can put it back later.
-      $Script:PreviousDefaultRegion = Get-DefaultAWSRegion
+        # If the caller gave us a profile name to use, set that up.
+        if ($PSBoundParameters.ContainsKey("ProfileName")) {
+            # There might be a session profile set already. Store it so we can put
+            # it back later.
+            $Script:PreviousSessionCredential = Get-AWSCredential
 
-      # Now set a session default region to use for our script.
-      Write-Verbose -Message "Setting session default region to '$Region'."
-      Set-DefaultAWSRegion -Region $Region
+            # Now set a session default credential to use for our script.
+            Write-Verbose -Message "Setting session default profile to '$ProfileName'."
+            Set-AWSCredential -ProfileName $ProfileName
 
-      # Again using $? to test if the previous command worked, and aborting
-      # if it didn't.
-      $Script:AbortFromBegin = $Script:AbortFromBegin -or !$?
-    }  
-  }
-  
-  process {
-    $script:tag = New-Object -TypeName Amazon.EC2.Model.Tag
-    $script:tag.Key = $key 
-    $script:tag.Value = $value
-  
-    return $script:tag
-  }
-  
-  end {
-    # If the caller passed in a profile name, we need to reset the session's
-    # default profile to whatever it was.
-    if ($PSBoundParameters.ContainsKey("ProfileName")) {
-      if ($Script:PreviousSessionCredential) {
-        # This session had a default profile set. Put it back.
-        Write-Verbose -Message "Restoring previous session default profile."
-        Set-AWSCredential -Credential $Script:PreviousSessionCredential
-      }
-      else {
-        # This session had no default profile set. Clear the profile we just
-        # used for this script.
-        Write-Verbose -Message "Clearing session default profile."
-        Clear-AWSCredential
-      }
+            # The special variable $? will contain true if the previous command was
+            # successful, otherwise false. If we failed to set the session profile,
+            # abort the script.
+            $Script:AbortFromBegin = $Script:AbortFromBegin -or !$?
+        }
+
+        # If the caller gave us a region to use, set that up.
+        if ($PSBoundParameters.ContainsKey("Region")) {
+            # There might be a session default region set already. Store it so we
+            # can put it back later.
+            $Script:PreviousDefaultRegion = Get-DefaultAWSRegion
+
+            # Now set a session default region to use for our script.
+            Write-Verbose -Message "Setting session default region to '$Region'."
+            Set-DefaultAWSRegion -Region $Region
+
+            # Again using $? to test if the previous command worked, and aborting
+            # if it didn't.
+            $Script:AbortFromBegin = $Script:AbortFromBegin -or !$?
+        }
     }
 
-    # If the caller passed in a default region, we need to reset the session's
-    # default region to whatever it was.
-    if ($PSBoundParameters.ContainsKey("Region")) {
-      if ($Script:PreviousDefaultRegion) {
-        # This session had a default region set. Put it back.
-        Write-Verbose -Message "Restoring previous session default region."
-        Set-DefaultAWSRegion -Region $Script:PreviousDefaultRegion
-      }
-      else {
-        # This session had no default region set. Clear the region we just
-        # used for this script.
-        Write-Verbose -Message "Clearing session default region."
-        Clear-DefaultAWSRegion
-      }
+    process {
+        $script:tag = New-Object -TypeName Amazon.EC2.Model.Tag
+        $script:tag.Key = $key
+        $script:tag.Value = $value
+
+        return $script:tag
     }
-  }
+
+    end {
+        # If the caller passed in a profile name, we need to reset the session's
+        # default profile to whatever it was.
+        if ($PSBoundParameters.ContainsKey("ProfileName")) {
+            if ($Script:PreviousSessionCredential) {
+                # This session had a default profile set. Put it back.
+                Write-Verbose -Message "Restoring previous session default profile."
+                Set-AWSCredential -Credential $Script:PreviousSessionCredential
+            } else {
+                # This session had no default profile set. Clear the profile we just
+                # used for this script.
+                Write-Verbose -Message "Clearing session default profile."
+                Clear-AWSCredential
+            }
+        }
+
+        # If the caller passed in a default region, we need to reset the session's
+        # default region to whatever it was.
+        if ($PSBoundParameters.ContainsKey("Region")) {
+            if ($Script:PreviousDefaultRegion) {
+                # This session had a default region set. Put it back.
+                Write-Verbose -Message "Restoring previous session default region."
+                Set-DefaultAWSRegion -Region $Script:PreviousDefaultRegion
+            } else {
+                # This session had no default region set. Clear the region we just
+                # used for this script.
+                Write-Verbose -Message "Clearing session default region."
+                Clear-DefaultAWSRegion
+            }
+        }
+    }
 }
 function New-MDEncryptedPasswordFile {
-  [CmdletBinding()]
-  param (
-    # Path of where to save the Key and Password files
-    [Parameter(mandatory = $true)]
-    [String]
-    $Path,
-    # Password to encrypt
-    [Parameter(mandatory = $true)]
-    [SecureString]
-    $Password
-  )
-  
-  begin {
-    $keyFile = Join-Path -Path $Path -ChildPath 'aes.key'
-    $passwordFile = Join-Path $Path -ChildPath 'password.txt'
-  }
-  
-  process {
-    try {
-      $Key = New-Object Byte[] 32
-      [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
-      $Key | out-file  $keyFile
-    } catch {
-      
+    [CmdletBinding()]
+    param (
+        # Path of where to save the Key and Password files
+        [Parameter(mandatory = $true)]
+        [String]
+        $Path,
+        # Password to encrypt
+        [Parameter(mandatory = $true)]
+        [SecureString]
+        $Password
+    )
+
+    begin {
+        $keyFile = Join-Path -Path $Path -ChildPath 'aes.key'
+        $passwordFile = Join-Path $Path -ChildPath 'password.txt'
     }
 
-    try {
-      $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
-    } catch {
-      
+    process {
+        try {
+            $Key = New-Object Byte[] 32
+            [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
+            $Key | out-file  $keyFile
+        } catch {
+
+        }
+
+        try {
+            $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
+        } catch {
+
+        }
     }
-  }
-  
-  end {
-  }
+
+    end {
+    }
 }
 <#
 .SYNOPSIS
@@ -281,7 +338,7 @@ function New-MDEncryptedPasswordFile {
   Active Directory Recycle Bin needs to be enabled: https://activedirectorypro.com/enable-active-directory-recycle-bin-server-2016/
 .EXAMPLE
   PS C:\> Restore-MDADUser test.mctest
-  
+
   Restores the user test.mctest back to Active Directory.
 .NOTES
   Taken from:
@@ -289,81 +346,121 @@ function New-MDEncryptedPasswordFile {
 #>
 
 function Restore-MDADUser {
-  [CmdletBinding()]
-  param (
-    # The samAccountName of the deleted user
-    [Parameter(
-      Mandatory = $true,
-      Position=0,
-      ValueFromPipeline=$true,
-      ValueFromPipelineByPropertyName=$true )]
-    [string]
-    $sAMAccountName
-  )
+    [CmdletBinding()]
+    param (
+        # The samAccountName of the deleted user
+        [Parameter(
+            Mandatory = $true,
+            Position = 0,
+            ValueFromPipeline = $true,
+            ValueFromPipelineByPropertyName = $true )]
+        [string]
+        $sAMAccountName
+    )
 
-  begin {
-    # Make sure Active Directory Recycle Bin is Enabled
-    if ($null -eq (Get-ADOptionalFeature -filter *).EnabledScopes) {
-      Write-Error 'Acitve Directory Recycle Bin is not Enabled' -ErrorAction Stop
-    }
-    
-    $deletedObjectContainer = (get-addomain).DeletedObjectsContainer
-  }
-  
-  process {
-    $distinguishedName = (Get-ADObject -SearchBase $deletedObjectContainer -IncludeDeletedObjects -filter "sAMAccountName -eq '$sAMAccountName'").distinguishedname
-    if ($null -eq $distinguishedName) {
-      Write-Error "sAMAccountName $sAMAccountName is not found in the Active directory recyle bin." -ErrorAction Stop
-    }
-    else {
-      try {
-        Restore-ADObject -Identity $distinguishedName -ErrorAction Stop
-        $message = "User $sAMAccountName has been restored. `n"
-        $message += (Get-ADUser -Identity $sAMAccountName).DistinguishedName
-      }
-      catch {
-        Write-Error -Message "Unable to restore $sAMAccount to Active Directory `n $PSItem"
-      }
+    begin {
+        # Make sure Active Directory Recycle Bin is Enabled
+        if ($null -eq (Get-ADOptionalFeature -filter *).EnabledScopes) {
+            Write-Error 'Acitve Directory Recycle Bin is not Enabled' -ErrorAction Stop
+        }
+
+        $deletedObjectContainer = (get-addomain).DeletedObjectsContainer
     }
 
+    process {
+        $distinguishedName = (Get-ADObject -SearchBase $deletedObjectContainer -IncludeDeletedObjects -filter "sAMAccountName -eq '$sAMAccountName'").distinguishedname
+        if ($null -eq $distinguishedName) {
+            Write-Error "sAMAccountName $sAMAccountName is not found in the Active directory recyle bin." -ErrorAction Stop
+        } else {
+            try {
+                Restore-ADObject -Identity $distinguishedName -ErrorAction Stop
+                $message = "User $sAMAccountName has been restored. `n"
+                $message += (Get-ADUser -Identity $sAMAccountName).DistinguishedName
+            } catch {
+                Write-Error -Message "Unable to restore $sAMAccount to Active Directory `n $PSItem"
+            }
+        }
 
-    Return $message
-  } # end process
-  
-  end {
-    Remove-Variable deletedObjectContainer
-  }
+
+        Return $message
+    } # end process
+
+    end {
+        Remove-Variable deletedObjectContainer
+    }
+}
+<#
+.SYNOPSIS
+    Sends a message to slack
+.DESCRIPTION
+    Long description
+.EXAMPLE
+    PS C:\> <example usage>
+    Explanation of what the example does
+.INPUTS
+    Inputs (if any)
+.OUTPUTS
+    Output (if any)
+.NOTES
+    General notes
+#>
+function Send-MDSlackMessage {
+    [CmdletBinding()]
+    param (
+        # URI of Slack Hook
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]
+        $Uri,
+        # Message To Send
+        [Parameter(Mandatory = $true, Position = 1)]
+        [string]
+        $Message
+    )
+
+    begin {
+        $payload = @{
+            "text" = $Message
+        }
+    }
+
+    process {
+        Invoke-RestMethod -Method Post -Uri $Uri -Body (ConvertTo-Json -InputObject $payload -Compress) -UseBasicParsing | Out-Null
+    }
+
+    end {
+
+    }
 }
 function Set-MDStandardResponse {
-  param (
-    # Parameter help description
-    [Parameter(Mandatory = $false)]
-    [String]
-    $Name,
-    # Parameter help description
-    [Parameter(Mandatory = $true)]
-    [string]
-    [ValidateSet('aws','adgroupadd', 'approval')]
-    $ResponseType 
-  )
+    param (
+        # Parameter help description
+        [Parameter(Mandatory = $false)]
+        [String]
+        $Name,
+        # Parameter help description
+        [Parameter(Mandatory = $true)]
+        [string]
+        [ValidateSet('aws', 'adgroupadd', 'approval')]
+        $ResponseType
+    )
 
-  switch ($ResponseType) {
-    'aws' { $response = "Hello $Name, `r`rYour account has been added to the requested AWS group(s). It can take 15 mins for the changes to propagate and you may need to logout and back into AWS Central access. `r`rThanks `r`rMatt" }
-    'adgroupadd' {$response = "Hello , `r`rAD account added to requested group.`r`rThanks,`r`rMatt"}
-    'approval' {$response = "Hello , `r`rCould you please approve the request for access to the production AWS accounts?`r`rThanks,`r`rMatt"}
-    Default {}
-  }
-
-  # Set the clipboard to the response
-  if ($PSVersionTable.PSEdition -eq 'Desktop') {
-    Set-Clipboard -Value $response
-  } elseif ($PSVesionTable.PSEdition -eq 'Core') {
-    if ((Get-Module -Name ClipboardText -ListAvailable) -eq $true) {
-      Import-Module -Name ClipboardText
-      Set-ClipboardText $response
-    } else {
-      Write-Error 'ClipboardText module not found. Please install it from the PowerShell gallery by running Install-Module -Name ClipboardText' -ErrorAction Stop
+    switch ($ResponseType) {
+        'aws' { $response = "Hello $Name, `r`rYour account has been added to the requested AWS group(s). It can take 15 mins for the changes to propagate and you may need to logout and back into AWS Central access. `r`rThanks `r`rMatt" }
+        'adgroupadd' { $response = "Hello , `r`rAD account added to requested group.`r`rThanks,`r`rMatt" }
+        'approval' { $response = "Hello , `r`rCould you please approve the request for access to the production AWS accounts?`r`rThanks,`r`rMatt" }
+        Default { }
     }
-  }
+
+    # Set the clipboard to the response
+    if ($PSVersionTable.PSEdition -eq 'Desktop') {
+        Set-Clipboard -Value $response
+    } elseif ($PSVesionTable.PSEdition -eq 'Core') {
+        if ((Get-Module -Name ClipboardText -ListAvailable) -eq $true) {
+            Import-Module -Name ClipboardText
+            Set-ClipboardText $response
+        } else {
+            Write-Error 'ClipboardText module not found. Please install it from the PowerShell gallery by running Install-Module -Name ClipboardText' -ErrorAction Stop
+        }
+    }
 }
 Export-ModuleMember -Function 
