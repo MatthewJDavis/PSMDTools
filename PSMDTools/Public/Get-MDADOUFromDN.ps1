@@ -10,29 +10,29 @@
   (Get-ADComputer dc01).DistinguishedName | Get-ADOuFromDN
 #>
 function Get-MDADOUFromDN {
-  [CmdletBinding()]
-  param (
-    # The string with the distinguished name from an AD cmdlet output
-    [Parameter(Mandatory=$true,
-    Position=0,
-    ValueFromPipeline=$true)]
-    [string]
-    $DistinguishedName
-  )
-  
-  begin {
-    if(-not (Select-String -InputObject $DistinguishedName -Pattern 'OU' -CaseSensitive -Quiet)){
-      Write-Host 'OU not found in input string'
-      Break   
+    [CmdletBinding()]
+    param (
+        # The string with the distinguished name from an AD cmdlet output
+        [Parameter(Mandatory = $true,
+            Position = 0,
+            ValueFromPipeline = $true)]
+        [string]
+        $DistinguishedName
+    )
+
+    begin {
+        if (-not (Select-String -InputObject $DistinguishedName -Pattern 'OU' -CaseSensitive -Quiet)) {
+            Write-Host 'OU not found in input string'
+            Break
+        }
     }
-  }
-  
-  process {
-    $ouIndex = $DistinguishedName.IndexOf('OU')
-    $ouPath = $DistinguishedName.Remove(0,$ouIndex)
-    Write-Output -InputObject $ouPath
-  }
-  
-  end {
-  }
+
+    process {
+        $ouIndex = $DistinguishedName.IndexOf('OU')
+        $ouPath = $DistinguishedName.Remove(0, $ouIndex)
+        Write-Output -InputObject $ouPath
+    }
+
+    end {
+    }
 }
