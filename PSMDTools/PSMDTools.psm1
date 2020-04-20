@@ -147,9 +147,9 @@ function Get-MDSystemInfo {
     }
 
     process {
-        $environment = $PSVersionTable.Platform
+        $environment = $env:OS
         switch ($environment) {
-            'Win32NT' {
+            'Windows_NT' {
                 $os = Get-CimInstance -ClassName Win32_OperatingSystem
                 $comp = Get-CimInstance -ClassName Win32_ComputerSystem
             }
