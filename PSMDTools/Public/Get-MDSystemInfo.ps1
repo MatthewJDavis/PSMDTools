@@ -21,36 +21,60 @@ function Get-MDSystemInfo {
         $ComputerName = 'localhost',
         [Parameter()]
         [switch]
-        $RunRemote
+        $RunRemote,
+        [Parameter()]
+        [pscredential]
+        $Credentials
     )
 
     begin {
+
     }
 
     process {
-        $environment = $env:OS
-        switch ($environment) {
-            'Windows_NT' {
-                $os = Get-CimInstance -ClassName Win32_OperatingSystem
-                $comp = Get-CimInstance -ClassName Win32_ComputerSystem
+        if ($PSBoundParameters['RunRemote']) {
+            try {
+                $CimSession = New-CimSession -Credential $Credentials -ComputerName $ComputerName -ErrorAction Stop
+            } catch {
+                Write-Error 'Unable to connect to computer'
             }
-            Default {
-                'Environment not yet supported'
-                break
+
+            $os = Get-CimInstance -ClassName Win32_OperatingSystem -CimSession $CimSession
+            $comp = Get-CimInstance -ClassName Win32_ComputerSystem -CimSession $CimSession
+            $procLoad = (Get-CimInstance -ClassName Win32_Processor -CimSession $CimSession).LoadPercentage
+            $disk = Get-CimInstance -ClassName Win32_LogicalDisk -CimSession $CimSession
+        } else {
+            $environment = $env:OS
+            switch ($environment) {
+                'Windows_NT' {
+                    $os = Get-CimInstance -ClassName Win32_OperatingSystem
+                    $comp = Get-CimInstance -ClassName Win32_ComputerSystem
+                    $procLoad = (Get-CimInstance -ClassName Win32_Processor).LoadPercentage
+                    $disk = Get-CimInstance -ClassName Win32_LogicalDisk
+                }
+                Default {
+                    'Environment not supported'
+                    break
+                }
             }
         }
 
+
         $system = [PSCustomObject][ordered]@{
+            'ComputerName'      = $comp.Name
             'OS'                = $os.Caption
             'Version'           = $os.Version
             'Build'             = $os.BuildNumber
             'LastBootTime'      = $os.LastBootUpTime
-            'ComputerName'      = $comp.Name
             'Manufacturer'      = $comp.Manufacturer
             'Model'             = $comp.Model
             'LogicalProcessors' = $comp.NumberOfLogicalProcessors
-            'Ram'               = "$([math]::Round($comp.TotalPhysicalMemory / 1GB))GB"
+            'RamGB'             = "$([math]::Round($comp.TotalPhysicalMemory / 1GB))"
             'WindowsDir'        = $os.WindowsDirectory
+            'ProcessorLoad%'    = "$($procLoad)"
+            'MemoryUsed%'       = "$([math]::Round(($os.TotalVisibleMemorySize -$os.FreePhysicalMemory) * 100 / $os.TotalVisibleMemorySize))"
+            'FreeDiskSpaceGB'   = "$([math]::Round($disk.FreeSpace / 1GB))"
+            'DiskSpaceUsed'     = "$([math]::Round(($disk.Size - $disk.FreeSpace) * 100 / $disk.size))"
         }
         $system
     }
