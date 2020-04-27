@@ -177,27 +177,25 @@ function Get-MDSystemInfo {
                 }
             }
         }
-
-
         $system = [PSCustomObject][ordered]@{
-            'ComputerName'      = $comp.Name
-            'OS'                = $os.Caption
-            'Version'           = $os.Version
-            'Build'             = $os.BuildNumber
-            'LastBootTime'      = $os.LastBootUpTime
-            'Manufacturer'      = $comp.Manufacturer
-            'Model'             = $comp.Model
-            'LogicalProcessors' = $comp.NumberOfLogicalProcessors
-            'RamGB'               = "$([math]::Round($comp.TotalPhysicalMemory / 1GB))"
-            'WindowsDir'        = $os.WindowsDirectory
-            'ProcessorLoad%'    = "$($procLoad)"
-            'MemoryUsed%'       = "$([math]::Round(($os.TotalVisibleMemorySize -$os.FreePhysicalMemory) * 100 / $os.TotalVisibleMemorySize))"
-            'FreeDiskSpaceGB'   = "$([math]::Round($disk.FreeSpace / 1GB))"
-            'DiskSpaceUsed'     = "$([math]::Round(($disk.Size - $disk.FreeSpace) * 100 / $disk.size))"
+            'ComputerName'         = $comp.Name
+            'OS'                   = $os.Caption
+            'Version'              = $os.Version
+            'Build'                = $os.BuildNumber
+            'LastBootTime'         = $os.LastBootUpTime
+            'Manufacturer'         = $comp.Manufacturer
+            'Model'                = $comp.Model
+            'LogicalProcessors'    = $comp.NumberOfLogicalProcessors
+            'RamGB'                = "$([math]::Round($comp.TotalPhysicalMemory / 1GB))"
+            'DiskSize'             = "$([math]::Round($disk.Size / 1GB))"
+            'DiskSpaceUsedPercent' = "$([math]::Round(($disk.Size - $disk.FreeSpace) * 100 / $disk.size))"
+            'WindowsDir'           = $os.WindowsDirectory
+            'ProcessorLoadPercent' = "$($procLoad)"
+            'MemoryUsedPercent'    = "$([math]::Round(($os.TotalVisibleMemorySize -$os.FreePhysicalMemory) * 100 / $os.TotalVisibleMemorySize))"
+            'FreeDiskSpaceGB'      = "$([math]::Round($disk.FreeSpace / 1GB))"
         }
         $system
     }
-
     end {
     }
 }
