@@ -22,7 +22,7 @@ function Get-MDADOUFromDN {
 
     begin {
         if (-not (Select-String -InputObject $DistinguishedName -Pattern 'OU' -CaseSensitive -Quiet)) {
-            Write-Host 'OU not found in input string'
+            Write-Output 'OU not found in input string'
             Break
         }
     }

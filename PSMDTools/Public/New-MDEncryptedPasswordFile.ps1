@@ -1,5 +1,8 @@
 function New-MDEncryptedPasswordFile {
-    [CmdletBinding()]
+    [CmdletBinding(
+        SupportsShouldProcess,
+        ConfirmImpact = 'Medium'
+    )]
     param (
         # Path of where to save the Key and Password files
         [Parameter(mandatory = $true)]
@@ -18,17 +21,15 @@ function New-MDEncryptedPasswordFile {
 
     process {
         try {
-            $Key = New-Object Byte[] 32
-            [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
-            $Key | out-file  $keyFile
+            if($PSCmdlet.ShouldProcess()){
+                $Key = New-Object Byte[] 32
+                [Security.Cryptography.RNGCryptoServiceProvider]::Create().GetBytes($Key)
+                $Key | Out-File  $keyFile
+                $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
+            }
+
         } catch {
-
-        }
-
-        try {
-            $Password | ConvertFrom-SecureString -key (Get-Content $keyFile) | Set-Content $passwordFile
-        } catch {
-
+            throw $_.Exception.Message
         }
     }
 

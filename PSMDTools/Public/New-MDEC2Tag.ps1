@@ -14,7 +14,10 @@ function New-MDEC2Tag {
 .NOTES
   General notes
 #>
-    [CmdletBinding()]
+    [CmdletBinding(
+        SupportsShouldProcess,
+        ConfirmImpact = 'Low'
+    )]
     param (
         # Tag Key
         [Parameter(Mandatory = $true)]
@@ -75,11 +78,13 @@ function New-MDEC2Tag {
     }
 
     process {
-        $script:tag = New-Object -TypeName Amazon.EC2.Model.Tag
-        $script:tag.Key = $key
-        $script:tag.Value = $value
+        if($PSCmdlet.ShouldProcess("$($key) $($value)")){
+            $script:tag = New-Object -TypeName Amazon.EC2.Model.Tag
+            $script:tag.Key = $key
+            $script:tag.Value = $value
 
-        return $script:tag
+            $script:tag
+        }
     }
 
     end {

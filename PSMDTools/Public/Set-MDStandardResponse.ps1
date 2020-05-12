@@ -1,4 +1,5 @@
 function Set-MDStandardResponse {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseShouldProcessForStateChangingFunctions", "")]
     param (
         # Parameter help description
         [Parameter(Mandatory = $false)]
