@@ -7,7 +7,11 @@ task BuildModuleManifest -depends Analyse, Test {
 
 task Analyse {
   'Running analyzer'
-  Invoke-ScriptAnalyzer -Path .\build.ps1 -Verbose
+  $saResults = Invoke-ScriptAnalyzer -Path .\PSMDTools\*.ps1
+  if($saResults) {
+    $saResults | Format-Table
+    Write-Error -Message 'One or more Script Analyser errors/warnings were found' -ErrorAction Stop
+  }
 }
 
 task Test {
