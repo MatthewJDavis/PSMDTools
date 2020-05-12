@@ -10,7 +10,7 @@ task Analyse {
   $saResults = Invoke-ScriptAnalyzer -Path .\PSMDTools\*.ps1
   if($saResults) {
     $saResults | Format-Table
-    Write-Error -Message 'One or more Script Analyser errors/warnings were found'
+    Write-Error -Message 'One or more Script Analyser errors/warnings were found' -ErrorAction Stop
   }
 }
 

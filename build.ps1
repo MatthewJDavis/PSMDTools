@@ -1,6 +1,8 @@
 [cmdletbinding()]
 param(
-  [string[]]$Task = 'default'
+    [Validateset('Default', 'Analyse', 'Test', 'BuildModuleManifest')]
+    [string[]]
+    $Task = 'default'
 )
 
 if (!(Get-Module -Name Pester -ListAvailable)) { Install-Module -Name Pester -Scope CurrentUser -Confirm:$true }
